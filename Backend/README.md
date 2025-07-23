@@ -160,3 +160,81 @@ Cookie: token=<token>
 - Same token cannot be reused after logout
 - All protected routes check against blacklist before allowing access
 - Supports both cookie-based and Bearer token authentication
+
+## Example API Requests
+
+### Register User
+```bash
+curl -X POST http://localhost:3000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "password": "password123"
+  }'
+```
+
+### Login User
+```bash
+curl -X POST http://localhost:3000/users/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.doe@example.com",
+    "password": "password123"
+  }'
+```
+
+### Get User Profile
+```bash
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Logout User
+```bash
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+## Testing with Postman
+
+1. **Register User**
+   - Method: POST
+   - URL: `http://localhost:3000/users/register`
+   - Headers: `Content-Type: application/json`
+   - Body:
+   ```json
+   {
+     "fullname": {
+       "firstname": "John",
+       "lastname": "Doe"
+     },
+     "email": "john.doe@example.com",
+     "password": "password123"
+   }
+   ```
+
+2. **Login User**
+   - Method: POST
+   - URL: `http://localhost:3000/users/login`
+   - Headers: `Content-Type: application/json`
+   - Body:
+   ```json
+   {
+     "email": "john.doe@example.com",
+     "password": "password123"
+   }
+   ```
+
+3. **Access Protected Route**
+   - Method: GET
+   - URL: `http://localhost:3000/users/profile`
+   - Headers: `Authorization: Bearer <your_token>`
+
+4. **Logout User**
+   - Method: GET
+   - URL: `http://localhost:3000/users/logout`
+   - Headers: `Authorization: Bearer <your_token>`
