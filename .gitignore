@@ -2,3 +2,6 @@
 node_modules
 demo.md
 .gitignore
+git-commit-push.bat
+vccode
+Backend/node_modules
