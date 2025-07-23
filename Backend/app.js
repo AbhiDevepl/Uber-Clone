@@ -10,12 +10,14 @@ const userRoutes = require('./router/user.routers')
 connectToDb();
 
 app.use(cors());
-app.user(express.json());
+app.use(express.json());
+
 
 app.get('/', (req, res) => {
     res.send('hello world');
 });
 
-app.user('/users', userRoutes)
+app.use('/users', userRoutes);
+
 
 module.exports = app;
