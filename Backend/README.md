@@ -1,47 +1,84 @@
-# User Authentication API Documentation
+# Captain API Documentation
 
-## Register Endpoint
+## Register Captain Endpoint
 
-### `POST /users/register`
+### `POST /api/captains/register`
 
-Registers a new user in the system and returns an authentication token.
+Registers a new captain in the system with vehicle details.
 
 ### Request Body
 ```json
 {
   "fullname": {
     "firstname": "string (min 2 chars, required)",
-    "lastname": "string (min 2 chars, optional)"
+    "lastname": "string (min 2 chars, required)"
   },
   "email": "string (valid email, required)",
-  "password": "string (min 6 chars, required)"
-}
-```
-
-### Response Codes
-- `201`: User created successfully
-- `400`: Validation errors
-- `500`: Server error
-
-### Success Response
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "60d3b41d8e28c13d3c11f111",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com"
+  "password": "string (min 6 chars, required)",
+  "vehicle": {
+    "vehicleType": "string (car|bike|auto, required)",
+    "capacity": "number (min 1, required)",
+    "color": "string (min 3 chars, required)",
+    "plate": "string (min 3 chars, required, unique)"
   }
 }
 ```
 
-### Error Response
+### Example Request
+```bash
+curl -X POST http://localhost:3000/api/captains/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Driver"
+    },
+    "email": "john.driver@example.com",
+    "password": "secure123",
+    "vehicle": {
+      "vehicleType": "car",
+      "capacity": 4,
+      "color": "black",
+      "plate": "ABC123"
+    }
+  }'
+```
+
+### Success Response (201 Created)
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "captain": {
+    "_id": "60d3b41d8e28c13d3c11f111",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Driver"
+    },
+    "email": "john.driver@example.com",
+    "status": "inactive",
+    "vehicle": {
+      "vehicleType": "car",
+      "capacity": 4,
+      "color": "black",
+      "plate": "ABC123"
+    },
+    "location": {
+      "lat": null,
+      "lng": null
+    }
+  }
+}
+```
+
+### Error Response (400 Bad Request)
 ```json
 {
   "errors": [
+    {
+      "msg": "Please enter a valid email",
+      "param": "email",
+      "location": "body"
+    },
     {
       "msg": "First name must be at least 2 characters long",
       "param": "fullname.firstname",
@@ -51,190 +88,106 @@ Registers a new user in the system and returns an authentication token.
 }
 ```
 
-## Login Endpoint
+## Captain Status Update
 
-### `POST /users/login`
+### `PUT /api/captains/status`
 
-Authenticates a user and returns an authentication token.
-
-### Request Body
-```json
-{
-  "email": "string (valid email, required)",
-  "password": "string (min 6 chars, required)"
-}
-```
-
-### Response Codes
-- `200`: Login successful
-- `400`: Validation errors
-- `401`: Invalid credentials
-- `500`: Server error
-
-### Success Response
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "60d3b41d8e28c13d3c11f111",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-### Error Response
-```json
-{
-  "message": "Invalid Email or Password"
-}
-```
-
-## Validation Rules
-
-### Register
-- Email must be valid
-- First name must be at least 2 characters
-- Password must be at least 6 characters
-
-### Login
-- Email must be valid
-- Password must be at least 6 characters
-
-## Token Blacklisting System
-
-### Overview
-The application implements a token blacklisting mechanism to handle user logout and invalidate tokens. When a user logs out, their token is added to a blacklist to prevent its further use.
-
-### How it Works
-
-1. **Token Storage**
-- Blacklisted tokens are stored in MongoDB
-- Each token entry includes:
-  ```json
-  {
-    "token": "string (the JWT token)",
-    "expiresAt": "Date (automatically set)"
-  }
-  ```
-- Tokens automatically expire after 24 hours (86400 seconds)
-
-### Logout Endpoint
-
-### `GET /users/logout`
-
-Logs out a user by blacklisting their current token.
+Updates the captain's active/inactive status.
 
 ### Headers Required
 ```
 Authorization: Bearer <token>
 ```
-or
-```
-Cookie: token=<token>
-```
 
-### Response Codes
-- `200`: Logout successful
-- `401`: Unauthorized/Invalid token
-
-### Success Response
+### Request Body
 ```json
 {
-  "message": "Logged out successfully"
+  "status": "string (active|inactive)"
 }
 ```
 
-### Error Response
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-### Security Features
-- Tokens are automatically removed from blacklist after 24 hours
-- Same token cannot be reused after logout
-- All protected routes check against blacklist before allowing access
-- Supports both cookie-based and Bearer token authentication
-
-## Example API Requests
-
-### Register User
+### Example Request
 ```bash
-curl -X POST http://localhost:3000/users/register \
+curl -X PUT http://localhost:3000/api/captains/status \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1..." \
   -H "Content-Type: application/json" \
   -d '{
+    "status": "active"
+  }'
+```
+
+### Success Response (200 OK)
+```json
+{
+  "captain": {
+    "_id": "60d3b41d8e28c13d3c11f111",
+    "status": "active",
     "fullname": {
       "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "password": "password123"
-  }'
+      "lastname": "Driver"
+    }
+  }
+}
 ```
 
-### Login User
+## Location Update
+
+### `PUT /api/captains/location`
+
+Updates the captain's current location.
+
+### Headers Required
+```
+Authorization: Bearer <token>
+```
+
+### Request Body
+```json
+{
+  "lat": "number",
+  "lng": "number"
+}
+```
+
+### Example Request
 ```bash
-curl -X POST http://localhost:3000/users/login \
+curl -X PUT http://localhost:3000/api/captains/location \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1..." \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "john.doe@example.com",
-    "password": "password123"
+    "lat": 51.5074,
+    "lng": -0.1278
   }'
 ```
 
-### Get User Profile
-```bash
-curl -X GET http://localhost:3000/users/profile \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+### Success Response (200 OK)
+```json
+{
+  "captain": {
+    "_id": "60d3b41d8e28c13d3c11f111",
+    "location": {
+      "lat": 51.5074,
+      "lng": -0.1278
+    }
+  }
+}
 ```
 
-### Logout User
-```bash
-curl -X GET http://localhost:3000/users/logout \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
+## Validation Rules
 
-## Testing with Postman
+### Registration
+- Email must be valid and unique
+- First name and last name must be 2-50 characters
+- Password must be at least 6 characters
+- Vehicle type must be one of: car, bike, auto
+- Vehicle capacity must be at least 1
+- Vehicle color must be at least 3 characters
+- Vehicle plate must be unique and at least 3 characters
 
-1. **Register User**
-   - Method: POST
-   - URL: `http://localhost:3000/users/register`
-   - Headers: `Content-Type: application/json`
-   - Body:
-   ```json
-   {
-     "fullname": {
-       "firstname": "John",
-       "lastname": "Doe"
-     },
-     "email": "john.doe@example.com",
-     "password": "password123"
-   }
-   ```
+### Location Update
+- Latitude and longitude must be valid coordinates
+- Authentication token required
 
-2. **Login User**
-   - Method: POST
-   - URL: `http://localhost:3000/users/login`
-   - Headers: `Content-Type: application/json`
-   - Body:
-   ```json
-   {
-     "email": "john.doe@example.com",
-     "password": "password123"
-   }
-   ```
-
-3. **Access Protected Route**
-   - Method: GET
-   - URL: `http://localhost:3000/users/profile`
-   - Headers: `Authorization: Bearer <your_token>`
-
-4. **Logout User**
-   - Method: GET
-   - URL: `http://localhost:3000/users/logout`
-   - Headers: `Authorization: Bearer <your_token>`
+### Status Update
+- Status must be either "active" or "inactive"
+- Authentication token required
