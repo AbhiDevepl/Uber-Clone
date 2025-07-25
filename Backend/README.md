@@ -2,7 +2,7 @@
 
 ## Register Captain Endpoint
 
-### `POST /api/captains/register`
+### `POST /captains/register`
 
 Registers a new captain in the system with vehicle details.
 
@@ -24,9 +24,11 @@ Registers a new captain in the system with vehicle details.
 }
 ```
 
-### Example Request
+### Example Requests
+
+#### Car Driver Registration
 ```bash
-curl -X POST http://localhost:3000/api/captains/register \
+curl -X POST http://localhost:4000/captains/register \
   -H "Content-Type: application/json" \
   -d '{
     "fullname": {
@@ -40,6 +42,46 @@ curl -X POST http://localhost:3000/api/captains/register \
       "capacity": 4,
       "color": "black",
       "plate": "ABC123"
+    }
+  }'
+```
+
+#### Bike Driver Registration
+```bash
+curl -X POST http://localhost:4000/captains/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullname": {
+      "firstname": "Mike",
+      "lastname": "Rider"
+    },
+    "email": "mike.rider@example.com",
+    "password": "bikepass456",
+    "vehicle": {
+      "vehicleType": "bike",
+      "capacity": 1,
+      "color": "red",
+      "plate": "BK789"
+    }
+  }'
+```
+
+#### Auto Rickshaw Driver Registration
+```bash
+curl -X POST http://localhost:4000/captains/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullname": {
+      "firstname": "Raj",
+      "lastname": "Kumar"
+    },
+    "email": "raj.kumar@example.com",
+    "password": "autopass789",
+    "vehicle": {
+      "vehicleType": "auto",
+      "capacity": 3,
+      "color": "yellow",
+      "plate": "AUTO456"
     }
   }'
 ```
@@ -88,76 +130,117 @@ curl -X POST http://localhost:3000/api/captains/register \
 }
 ```
 
-## Captain Status Update
+## Login Captain Endpoint
 
-### `PUT /api/captains/status`
+### `POST /captains/login`
 
-Updates the captain's active/inactive status.
-
-### Headers Required
-```
-Authorization: Bearer <token>
-```
+Authenticates a captain and returns a JWT token.
 
 ### Request Body
 ```json
 {
-  "status": "string (active|inactive)"
+  "email": "string (valid email, required)",
+  "password": "string (min 6 chars, required)"
 }
 ```
 
-### Example Request
+### Example Requests
+
+#### Standard Login
 ```bash
-curl -X PUT http://localhost:3000/api/captains/status \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1..." \
+curl -X POST http://localhost:4000/captains/login \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "active"
+    "email": "john.driver@example.com",
+    "password": "secure123"
   }'
+```
+
+#### JavaScript/Fetch Example
+```javascript
+const response = await fetch('http://localhost:4000/captains/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    email: 'john.driver@example.com',
+    password: 'secure123'
+  })
+});
+
+const data = await response.json();
+console.log('Login successful:', data);
 ```
 
 ### Success Response (200 OK)
 ```json
 {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "captain": {
     "_id": "60d3b41d8e28c13d3c11f111",
-    "status": "active",
     "fullname": {
       "firstname": "John",
       "lastname": "Driver"
+    },
+    "email": "john.driver@example.com",
+    "status": "inactive",
+    "vehicle": {
+      "vehicleType": "car",
+      "capacity": 4,
+      "color": "black",
+      "plate": "ABC123"
     }
   }
 }
 ```
 
-## Location Update
+### Error Response (400 Bad Request)
+```json
+{
+  "message": "Invalid email or password"
+}
+```
 
-### `PUT /api/captains/location`
+## Get Captain Profile
 
-Updates the captain's current location.
+### `GET /captains/profile`
+
+Gets the authenticated captain's profile information.
 
 ### Headers Required
 ```
 Authorization: Bearer <token>
 ```
 
-### Request Body
-```json
-{
-  "lat": "number",
-  "lng": "number"
-}
+### Example Requests
+
+#### Using cURL
+```bash
+curl -X GET http://localhost:4000/captains/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-### Example Request
+#### Using JavaScript/Fetch
+```javascript
+const token = localStorage.getItem('captainToken'); // Assuming token is stored
+
+const response = await fetch('http://localhost:4000/captains/profile', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+const profile = await response.json();
+console.log('Captain Profile:', profile);
+```
+
+#### Using Cookie Authentication
 ```bash
-curl -X PUT http://localhost:3000/api/captains/location \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "lat": 51.5074,
-    "lng": -0.1278
-  }'
+curl -X GET http://localhost:4000/captains/profile \
+  -H "Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Success Response (200 OK)
@@ -165,11 +248,68 @@ curl -X PUT http://localhost:3000/api/captains/location \
 {
   "captain": {
     "_id": "60d3b41d8e28c13d3c11f111",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Driver"
+    },
+    "email": "john.driver@example.com",
+    "status": "inactive",
+    "vehicle": {
+      "vehicleType": "car",
+      "capacity": 4,
+      "color": "black",
+      "plate": "ABC123"
+    },
     "location": {
-      "lat": 51.5074,
-      "lng": -0.1278
+      "lat": null,
+      "lng": null
     }
   }
+}
+```
+
+## Logout Captain
+
+### `GET /captains/logout`
+
+Logs out the captain by blacklisting their token.
+
+### Headers Required
+```
+Authorization: Bearer <token>
+```
+
+### Example Requests
+
+#### Using cURL
+```bash
+curl -X GET http://localhost:4000/captains/logout \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+#### Using JavaScript/Fetch
+```javascript
+const token = localStorage.getItem('captainToken');
+
+const response = await fetch('http://localhost:4000/captains/logout', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+const result = await response.json();
+if (response.ok) {
+  localStorage.removeItem('captainToken'); // Clear token from storage
+  console.log('Logged out successfully');
+}
+```
+
+### Success Response (200 OK)
+```json
+{
+  "message": "Logged out successfully"
 }
 ```
 
@@ -184,10 +324,89 @@ curl -X PUT http://localhost:3000/api/captains/location \
 - Vehicle color must be at least 3 characters
 - Vehicle plate must be unique and at least 3 characters
 
-### Location Update
-- Latitude and longitude must be valid coordinates
-- Authentication token required
+### Login
+- Email must be valid
+- Password must be at least 6 characters
 
-### Status Update
-- Status must be either "active" or "inactive"
-- Authentication token required
+### Authentication
+- JWT token required for protected routes (profile, logout)
+- Token expires after 24 hours
+- Logged out tokens are blacklisted
+
+## Available Endpoints Summary
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/captains/register` | Register new captain | No |
+| POST | `/captains/login` | Login captain | No |
+| GET | `/captains/profile` | Get captain profile | Yes |
+| GET | `/captains/logout` | Logout captain | Yes |
+
+## Error Responses
+
+### 400 Bad Request
+Validation errors or invalid data format
+
+### 401 Unauthorized  
+Missing or invalid authentication token
+
+### 500 Internal Server Error
+Server-side errors
+
+## Complete Usage Example
+
+Here's a complete workflow example showing how to register, login, get profile, and logout:
+
+```javascript
+// 1. Register a new captain
+const registerResponse = await fetch('http://localhost:4000/captains/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    fullname: { firstname: "Sarah", lastname: "Wilson" },
+    email: "sarah.wilson@example.com",
+    password: "mypassword123",
+    vehicle: {
+      vehicleType: "car",
+      capacity: 4,
+      color: "white",
+      plate: "SW2024"
+    }
+  })
+});
+
+const registerData = await registerResponse.json();
+const token = registerData.token;
+
+// 2. Get captain profile
+const profileResponse = await fetch('http://localhost:4000/captains/profile', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+const profile = await profileResponse.json();
+console.log('Captain Profile:', profile.captain);
+
+// 3. Logout
+const logoutResponse = await fetch('http://localhost:4000/captains/logout', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+const logoutResult = await logoutResponse.json();
+console.log(logoutResult.message); // "Logged out successfully"
+```
+
+## Testing with Postman
+
+### Environment Variables
+Create these variables in Postman:
+- `baseUrl`: `http://localhost:4000`
+- `captainToken`: (will be set automatically after login)
+
+### Collection Structure
+1. **Register Captain** - POST `{{baseUrl}}/captains/register`
+2. **Login Captain** - POST `{{baseUrl}}/captains/login`
+   - In Tests tab, add: `pm.environment.set("captainToken", pm.response.json().token);`
+3. **Get Profile** - GET `{{baseUrl}}/captains/profile`
+   - In Headers: `Authorization: Bearer {{captainToken}}`
+4. **Logout** - GET `{{baseUrl}}/captains/logout`
+   - In Headers: `Authorization: Bearer {{captainToken}}`
