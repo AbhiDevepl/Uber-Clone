@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 
 app.get('/', (req, res) => {
-    res.send('hello world');
+    res.send('Hello From Uber Backend');
 });
 
 app.use('/users', userRoutes);
