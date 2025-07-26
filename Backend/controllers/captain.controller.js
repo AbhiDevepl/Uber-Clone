@@ -1,7 +1,7 @@
 const captainModel = require('../models/captain.model');
 const captainService = require('../services/captain.service');
 const { validationResult } = require('express-validator');
-const BlacklistTokenModel = require('../models/BlacklistToken.model');
+const BlacklistTokenModel = require('../models/blacklistToken.model');
 
 module.exports.registerCaptain = async (req, res, next) => {
     const errors = validationResult(req);
@@ -11,7 +11,7 @@ module.exports.registerCaptain = async (req, res, next) => {
 
     const { email, fullname, password, vehicle } = req.body;
 
-    const isCaptainAlreadyExist = await captainModel.find*({ email });
+    const isCaptainAlreadyExist = await captainModel.findOne({ email });
     if (isCaptainAlreadyExist) {
         return res.status(400).json({message:'Captain Already exist'})
         
@@ -20,7 +20,7 @@ module.exports.registerCaptain = async (req, res, next) => {
     const hashedPassword = await captainModel.hashPassword(password);
 
     const captain = await captainService.createCaptain({
-        fistname: fullname.firstname,
+        firstname : fullname.firstname,
         lastname: fullname.lastname,
         email,
         password: hashedPassword,
@@ -31,7 +31,7 @@ module.exports.registerCaptain = async (req, res, next) => {
 
     });
 
-    const token = captainModel.generateAuthToken();
+    const token = captain.generateAuthToken();
 
     res.status(201).json({token, captain });
 
@@ -51,7 +51,13 @@ module.exports.loginCaptain = async (req, res, next) => {
         return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const token = captainModel.generateAuthToken();
+    const isMatch = await captain.comparePassword(password);
+
+    if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const token = captain.generateAuthToken();
     res.cookie('token', token);
     res.status(200).json({ token, captain });
 }

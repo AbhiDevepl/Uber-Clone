@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const { Socket } = require('node:dgram');
-const brcypt = require('bcrypt');
+const bcrypt = require('bcrypt');
+const { selectFields } = require('express-validator/lib/field-selection');
 const jwt = require('jsonwebtoken');
 
 
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        Select: false,
+        select: false,
     },
     socketId: {
         type: String,
@@ -44,11 +44,11 @@ userSchema.methods.generateAuthToken = function() {
 
 
 userSchema.methods.comparePassword = async function(password) {
-   return await brcypt.compare(password, this.password);
+   return await bcrypt.compare(password, this.password);
 }
 
 userSchema.statics.hashPassword = async function(password) {
-    return await brcypt.hash(password, 10);
+    return await bcrypt.hash(password, 10);
 }
 
 

@@ -10,7 +10,7 @@ module.exports.createCaptain = async ({
 
     const captain = captainModel.create({
         fullname: {
-            firstname: fistname,
+            firstname: firstname,
             lastname: lastname
         },
         email,
